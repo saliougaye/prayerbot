@@ -1,6 +1,16 @@
-const moment = require('moment')
+const { createClient } = require('redis');
 
-const d = moment("Sun 2 Jan 2022", "ddd, DD MMM YYYY");
+(async () => {
+  const client = createClient();
 
-console.log("Today: " + d.toString())
-console.log("Tommorrow: " + d.add(1, 'days').format('ddd, DD MMM YYYY'))
+  client.on('error', (err) => console.log('Redis Client Error', err));
+
+  await client.connect();
+
+  await client.set('key', 'value');
+  const value = await client.get('key1');
+
+  console.log(value);
+
+  await client.disconnect();
+})();

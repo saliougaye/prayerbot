@@ -1,20 +1,19 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const BOT_TOKEN = process.env.BOT_TOKEN
+
 const TelegramBot = require('node-telegram-bot-api');
 const moment = require('moment')
 
 
+const DB = require('./data')();
+
+const BOT_TOKEN = process.env.BOT_TOKEN
+
+
 const {
     getPrayers
-} = require('./utils')
+} = require('./utils');
 
-
-const bot = new TelegramBot(BOT_TOKEN, {
-    polling: true
-});
-
-const initUser = {}
 
 const DEFAULT_MESSAGE = {
     WRITE_CITY_NAME: 'Write Your City Name',
@@ -29,44 +28,45 @@ const DEFAULT_MESSAGE = {
 }
 
 
-bot.on('message', async (msg) => {
+
+
+
+
+
+const onStartCommand = async (message) => {
     
-    const message = await commandSwitch(msg);
+    let user = await DB.getUser(message.chat.id);
 
-    console.log(msg);
-
-    bot.sendMessage(msg.chat.id, message.text, message.options);
-})
-
-
-const onStartCommand = (message) => {
-    
-
-    if(initUser[message.chat.id] === undefined) {
+    if(user === undefined) {
         
-        initUser[message.chat.id] = {
+        user = {
             chatId: message.chat.id,
             isConfigEnd: false,
             city: undefined,
             
-        };
+        }
+        
+        await DB.addUser(user);
     }
 
 
 
     return {
-        text: DEFAULT_MESSAGE.WRITE_CITY_NAME,
-        options: undefined
+        text: DEFAULT_MESSAGE.WRITE_CITY_NAME
     }
 }
 
 
-const handleMessage = (message) => {
+const handleMessage = async (message) => {
 
-    if(initUser[message.chat.id] !== undefined && initUser[message.chat.id].isConfigEnd === false) {
-        initUser[message.chat.id].city = message.text;
+    const user = await DB.getUser(message.chat.id);
 
-        initUser[message.chat.id].isConfigEnd = true;
+    if(user !== undefined && user.isConfigEnd === false) {
+        user.city = message.text;
+
+        user.isConfigEnd = true;
+
+        await DB.editUser(user);
 
         return {
             text: DEFAULT_MESSAGE.CONFIG_COMPLETED,
@@ -90,7 +90,7 @@ const handleMessage = (message) => {
 
 const handlePrayerTime = async (message, today) => {
 
-    const user = initUser[message.chat.id];
+    const user = await DB.getUser(message.chat.id);
 
     if(user !== undefined && user.city) {
         const prayerData = await getPrayers(user.city);
@@ -99,7 +99,7 @@ const handlePrayerTime = async (message, today) => {
 
 
 
-        const day = today ? `📅 Today ${prayerData.date}` : `➡ Tomorrow ${moment(prayerData.date, 'ddd, DD MMM YYYY').add(1, 'days').format('ddd, DD MMM YYYY')}`
+        const day = today ? `📅 Today ${prayerData.date}` : `➡ Tomorrow ${moment(prayerData.date, 'ddd,DD MMM YYYY').add(1, 'days').format('ddd, DD MMM YYYY')}`
         const prayerTimes = today ? prayerData.today : prayerData.tomorrow;
 
         for(const prop in prayerTimes) {
@@ -121,16 +121,20 @@ const handlePrayerTime = async (message, today) => {
     
 }
 
-const handleChangeCity = (message) => {
+const handleChangeCity = async (message) => {
 
-    if(initUser[message.chat.id] !== undefined) {
+    let user = await DB.getUser(message.chat.id);
+
+    if(user !== undefined) {
+
         
-        initUser[message.chat.id] = {
+        user = {
             chatId: message.chat.id,
             isConfigEnd: false,
-            city: undefined,
-            
+            city: undefined
         };
+
+
     }
 
 
@@ -147,7 +151,7 @@ const commandSwitch = async (message) => {
     let data;
     switch(message.text) {
         case "/start":
-            data = onStartCommand(message);
+            data = await onStartCommand(message);
             break;
         case DEFAULT_MESSAGE.KEYBOARD_TEXT.TODAY:
             data = await handlePrayerTime(message, true)
@@ -156,10 +160,10 @@ const commandSwitch = async (message) => {
             data = await handlePrayerTime(message, false)
             break;
         case DEFAULT_MESSAGE.KEYBOARD_TEXT.CHANGE_CITY:
-            data = handleChangeCity(message);
+            data = await handleChangeCity(message);
             break;
         default:
-            data = handleMessage(message);
+            data = await handleMessage(message);
             break;
             
     }
@@ -167,3 +171,37 @@ const commandSwitch = async (message) => {
     return data;
 
 }
+
+
+
+
+
+
+(async () => {
+    await DB.initDb();
+
+    const bot = new TelegramBot(BOT_TOKEN, {
+        polling: true
+    });
+
+    bot.on('message', async (msg) => {
+    
+        const message = await commandSwitch(msg);
+    
+        bot.sendMessage(msg.chat.id, message.text, message.options);
+    })
+
+    process.on('SIGINT', async () => {
+        await DB.closeClient();
+    })
+
+    process.on('SIGTERM', async () => {
+        await DB.closeClient();
+    })
+
+    process.on('SIGKILL', async () => {
+        await DB.closeClient();
+    })
+    
+    
+})();
