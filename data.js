@@ -23,14 +23,13 @@ const data = () => {
             await client.set('users', JSON.stringify({}));
         }
 
-        // const prayersObj = await client.get('prayers');
+        const prayersObj = await client.get('prayers');
 
-        // if(!prayersObj) {
-        //     await client.set('prayers', JSON.stringify({}));
-        // }
+        if(!prayersObj) {
+            await client.set('prayers', JSON.stringify({}));
+        }
 
 
-        //await closeClient()
     }
 
     const getUser = async (chatId) => {
@@ -73,6 +72,10 @@ const data = () => {
 
     const addPrayerTimes = () => {
 
+    }
+
+    const getPrayers = async (city) => {
+        
     }
 
     return {

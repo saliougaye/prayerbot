@@ -89,10 +89,12 @@ const handleMessage = async (message) => {
 }
 
 const handlePrayerTime = async (message, today) => {
-
     const user = await DB.getUser(message.chat.id);
 
     if(user !== undefined && user.city) {
+
+
+        
         const prayerData = await getPrayers(user.city);
 
         let times = '';
