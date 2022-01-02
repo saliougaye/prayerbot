@@ -1,12 +1,6 @@
-const axios = require('axios');
+const moment = require('moment')
 
-const dotenv = require('dotenv');
-dotenv.config();
+const d = moment("Sun 2 Jan 2022", "ddd, DD MMM YYYY");
 
-(async () => {
-
-    const res = await axios.get(`${process.env.ENDPOINT}/venice`);
-    
-    console.log(res.data)
-
-})()
+console.log("Today: " + d.toString())
+console.log("Tommorrow: " + d.add(1, 'days').format('ddd, DD MMM YYYY'))
