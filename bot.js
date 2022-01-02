@@ -93,15 +93,23 @@ const handlePrayerTime = async (message, today) => {
 
     if(user !== undefined && user.city) {
 
-
+        let prayerData = await DB.getPrayers(moment().format('ddd,DD MMM YYYY'), user.city)
         
-        const prayerData = await getPrayers(user.city);
+        if(!prayerData) {
+            prayerData = await getPrayers(user.city);
+            
+            await DB.addPrayerTimes(moment(prayerData.date, 'ddd,DD MMM YYYY').format('ddd,DD MMM YYYY'), user.city, {
+                today: prayerData.today,
+                tomorrow: prayerData.tomorrow
+            });
+        }
+        
 
         let times = '';
 
 
 
-        const day = today ? `📅 Today ${prayerData.date}` : `➡ Tomorrow ${moment(prayerData.date, 'ddd,DD MMM YYYY').add(1, 'days').format('ddd, DD MMM YYYY')}`
+        const day = today ? `📅 ${prayerData.date}` : `➡ ${moment(prayerData.date, 'ddd,DD MMM YYYY').add(1, 'days').format('ddd,DD MMM YYYY')}`
         const prayerTimes = today ? prayerData.today : prayerData.tomorrow;
 
         for(const prop in prayerTimes) {
@@ -110,7 +118,7 @@ const handlePrayerTime = async (message, today) => {
 
         return {
             text: `
-            ${day}\n🏠 City ${prayerData.city}\n${times}
+            ${day}\n🏠 ${prayerData.city}\n${times}
             `
         }
     }
@@ -135,6 +143,8 @@ const handleChangeCity = async (message) => {
             isConfigEnd: false,
             city: undefined
         };
+
+        await DB.editUser(user)
 
 
     }

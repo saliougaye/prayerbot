@@ -59,7 +59,7 @@ const data = () => {
     const editUser = async (user) => {
 
 
-        const usersRaw = await client.get("users") 
+        const usersRaw = await client.get("users"); 
         
         const users = JSON.parse(usersRaw);
 
@@ -70,11 +70,39 @@ const data = () => {
 
     }
 
-    const addPrayerTimes = () => {
+    const addPrayerTimes = async (date, city, data) => {
+
+        const prayersRaw = await client.get("prayers");
+
+        const prayers = JSON.parse(prayersRaw);
+
+        if(!prayers[date]) {
+            prayers[date] = {};
+        }
+
+        prayers[date][city] = data;
+
+        await client.set("prayers", JSON.stringify(prayers));
 
     }
 
-    const getPrayers = async (city) => {
+    const getPrayers = async (date, city) => {
+
+        const prayersRaw = await client.get("prayers");
+
+        const prayers = JSON.parse(prayersRaw);
+
+        if(prayers[date] && prayers[date][city]) {
+            const prayerData = prayers[date][city];
+
+            return {
+                city: city,
+                date: date,
+                ...prayerData
+            }
+        }
+        
+        return undefined;
         
     }
 
@@ -83,7 +111,9 @@ const data = () => {
         getUser,
         addUser,
         editUser,
-        closeClient
+        closeClient,
+        getPrayers,
+        addPrayerTimes
     }
 
 }

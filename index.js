@@ -1,16 +1,10 @@
-const { createClient } = require('redis');
+const body = require('./structure.json');
+console.log(body.prayers["data"])
 
-(async () => {
-  const client = createClient();
+const ou = {
+  city: 'city',
+  date: 'date',
+  ...body.prayers["data"]["conegl"]
+}
 
-  client.on('error', (err) => console.log('Redis Client Error', err));
-
-  await client.connect();
-
-  await client.set('key', 'value');
-  const value = await client.get('key1');
-
-  console.log(value);
-
-  await client.disconnect();
-})();
+console.log(ou)
