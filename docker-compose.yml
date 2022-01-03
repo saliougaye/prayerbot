@@ -13,6 +13,8 @@ services:
       context: ./cache-cleaner-worker
     depends_on:
       - redis
+    environment:
+      - REDIS_DB=redis://redis:6379
     networks:
       - prayernetwork
   
