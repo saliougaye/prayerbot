@@ -6,11 +6,11 @@ const TelegramBot = require('node-telegram-bot-api');
 const moment = require('moment')
 const DB = require('./data')();
 
-
 const {
     DEFAULT_MESSAGE,
     DATE_FORMAT,
-    KEYBOARD
+    KEYBOARD,
+    COMMANDS
 } = require('./constant/index');
 
 
@@ -151,19 +151,19 @@ const handleChangeCity = async (message) => {
 const commandSwitch = async (message) => {
     let data;
     switch(message.text) {
-        case "/start":
+        case COMMANDS.START:
             data = await onStartCommand(message);
             break;
         case DEFAULT_MESSAGE.KEYBOARD_TEXT.TODAY:
-        case "/todayprayers":
+        case COMMANDS.TODAY_PRAYERS:
             data = await handlePrayerTime(message, true)
             break;
         case DEFAULT_MESSAGE.KEYBOARD_TEXT.TOMORROW:
-        case "/tomorrowprayers":
+        case COMMANDS.TOMORROW_PRAYERS:
             data = await handlePrayerTime(message, false)
             break;
         case DEFAULT_MESSAGE.KEYBOARD_TEXT.CHANGE_CITY:
-        case "/changecity":
+        case COMMANDS.CHANGE_CITY:
             data = await handleChangeCity(message);
             break;
         default:
