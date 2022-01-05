@@ -68,13 +68,6 @@ const handleMessage = async (message) => {
             }
         }
     }
-    
-    return {
-        text: DEFAULT_MESSAGE.ERROR,
-        options: {
-            reply_markup: KEYBOARD
-        }
-    }
 
 }
 
@@ -109,13 +102,9 @@ const handlePrayerTime = async (message, today) => {
         }
     }
 
+    const initialize = await onStartCommand(message);
 
-    return {
-        text: DEFAULT_MESSAGE.ERROR,
-        options: {
-            reply_markup: KEYBOARD
-        }
-    }
+    return initialize;
 
     
 }

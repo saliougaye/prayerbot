@@ -1,7 +1,11 @@
 const moment = require('moment');
 const { createClient } = require('redis');
 const intervalTime = 60000;
-const midnight = '0:00:00'
+const FORMAT_TIME = 'H:mm:ss';
+const FORMAT_DATE = 'ddd,DD MMM YYYY';
+
+const midnight = moment('0:00:00', FORMAT_TIME);
+const one = moment('1:00:00', FORMAT_TIME);
 
 const delay = () => {
     return new Promise(res => setTimeout(res, intervalTime))
@@ -21,9 +25,11 @@ const delay = () => {
     
         while(true) {
     
-            const now = moment().format('H:mm:ss');
+            const now = moment();
+
+            const isTimeToClear = now.isBetween(midnight, one);
     
-            if(now === midnight) {
+            if(isTimeToClear) {
     
                 await client.connect();
     
@@ -32,7 +38,7 @@ const delay = () => {
                 const prayers = JSON.parse(prayersRaw);
                 
                 for(const date in prayers) {
-                    const dateFormat = moment(date, 'ddd,DD MMM YYYY');
+                    const dateFormat = moment(date, FORMAT_DATE);
 
                     if(dateFormat.isBefore(moment())) {
 
