@@ -5,27 +5,3 @@ services:
     image: redis
     ports:
       - 6379:6379
-    networks:
-      - prayernetwork
-  
-  cleaner-worker:
-    build:
-      context: ./cache-cleaner-worker
-    depends_on:
-      - redis
-    environment:
-      - REDIS_DB=redis://redis:6379
-    networks:
-      - prayernetwork
-  
-  bot:
-    build: 
-      context: ./telegrambot
-    depends_on:
-      - redis
-    environment:
-      - REDIS_DB=redis://redis:6379
-    networks:
-      - prayernetwork
-networks:
-  prayernetwork:
