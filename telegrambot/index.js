@@ -60,7 +60,6 @@ bot.on('callback_query', async (ctx) => {
 
 
 bot.on('location', async (ctx) => {
-    console.log(ctx.message.location);
 
     const { latitude, longitude } = ctx.message.location;
 

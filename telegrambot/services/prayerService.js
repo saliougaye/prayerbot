@@ -70,7 +70,7 @@ const handler = () => {
 
         try {
 
-            const cachedPrayers = getCachePrayers();
+            const cachedPrayers = await getCachePrayers();
 
             let data;
 
@@ -102,7 +102,7 @@ const handler = () => {
     }
 
     const cachePrayers = async (data) => {
-        await redis.set(prayerKey, data)
+        await redis.set(prayerKey, JSON.stringify(data))
     }
 
     const getCachePrayers = async () => {
