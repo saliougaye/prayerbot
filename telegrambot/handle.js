@@ -1,4 +1,6 @@
 const redis = require('./helper/redis-helper');
+const axios = require('axios');
+const config = require('./helper/config-helper')
 
 
 const handler = () => {
@@ -19,7 +21,7 @@ const handler = () => {
         }
     }
 
-    const insertUser = async (userId, city) => {
+    const setUserLocation = async (userId, city) => {
 
         try {
 
@@ -36,7 +38,7 @@ const handler = () => {
         }
     }
 
-    const getUserCity = async (userId) => {
+    const getUserLocation = async (userId) => {
 
         try {
 
@@ -50,10 +52,31 @@ const handler = () => {
         }
     }
 
+
+    // FIXME cache
+    const getPrayers = async (city) => {
+
+        try {
+            const res = await axios.get(`${config.api}/${city}`);
+
+            const data = res.data;
+
+            return data;
+
+        } catch (error) {
+            
+            console.log(error);
+
+            return undefined;
+        }
+
+    }
+
     return {
         userExist,
-        insertUser,
-        getUserCity
+        setUserLocation,
+        getUserLocation,
+        getPrayers,
     }
 }
 

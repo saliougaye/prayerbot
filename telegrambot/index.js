@@ -9,6 +9,7 @@ const geocoder = NodeGeocoder({
 });
 
 const service = require('./handle');
+const { prayerDataToString } = require('./utils');
 
 
 
@@ -16,39 +17,43 @@ bot.start(async (ctx) => {
 
     // FIXME give a better message when start
 
-    
-    const userExist = await service.userExist(ctx.update.message.from.id);
+    const userId = ctx.update.message.from.id;
+    const userExist = await service.userExist(userId);
 
     if(userExist) {
-        // FIXME return prayers
+
+        const message = await getPrayerMessage(userId)
         
-        return ctx.reply('Welcome my friend');
+        return ctx.reply(message);
     }
 
     return ctx.reply(
         'Give me the location',
         Markup.keyboard([
             Markup.button.locationRequest('📍 Give me the location')
-        ]).resize()
-    )
+        ])
+        .resize()
+        .oneTime()
+    );
 })
 
 
 
 
 bot.on('callback_query', async (ctx) => {
-    console.log(ctx);
 
     const data = ctx.callbackQuery.data;
 
-    if(data.includes('init_city')) {
+    if(data.includes('set_city')) {
         const userId = ctx.callbackQuery.from.id;
 
-        const result = await service.insertUser(userId, data.replace('set_city=', ''))
+        const city = data.replace('set_city=', '');
+
+        const result = await service.setUserLocation(userId, city);
 
         await ctx.answerCbQuery('Thank you for the position 🙏🏿');
 
-        return result ? ctx.reply('Welcome my friend') : ctx.reply('Error');
+        return result ? ctx.reply(`📍 Your Location is ${city}`) : ctx.reply('Error'); // FIXME messages
 
     }
     
@@ -66,12 +71,13 @@ bot.on('location', async (ctx) => {
     const mapped = res.map(el => ({ city: el.city, country: el.country }));
 
 
+
     return ctx.reply(
         'Which one of this?',
         Markup.inlineKeyboard(
             [
                 mapped.map(el => (
-                    Markup.button.callback(`${el.city} - ${el.country}`, `init_city=${el.city}`) // FIXME constant value set_city 
+                    Markup.button.callback(`${el.city} - ${el.country}`, `set_city=${el.city}`) // FIXME constant value set_city 
                 ))
             ]
         )
@@ -81,10 +87,49 @@ bot.on('location', async (ctx) => {
 });
 
 bot.command('today', async (ctx) => {
+    const userId = ctx.update.message.from.id;
+    const userExist = await service.userExist(userId);
 
+    if(!userExist) {
+        return ctx.reply('Please, type /start') // FIXME message
+    }
+
+    const message = await getPrayerMessage(userId);
+
+    return ctx.reply(message);
+    
+});
+
+
+bot.command('location', async (ctx) => {
+
+    // FIXME locatin keyboard remove after clicked
+    return ctx.reply(
+        'Give me the location',
+        Markup.keyboard([
+            Markup.button.locationRequest('📍 Give me the location')
+        ])
+        .resize()
+        .oneTime()
+    );
 })
 
 
+const getPrayerMessage = async (userId) => {
+
+    const city = await service.getUserLocation(userId);
+
+    const prayers = await service.getPrayers(city);
+
+
+    if(!prayers) {
+        return 'Sorry im having errors';
+    }
+
+    const message = prayerDataToString(prayers, true);
+
+    return message;
+}
 
 
 

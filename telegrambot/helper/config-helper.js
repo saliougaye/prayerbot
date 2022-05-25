@@ -3,7 +3,8 @@ require('dotenv').config();
 
 const requiredKey = [
     "REDIS",
-    "BOT_TOKEN"
+    "BOT_TOKEN",
+    "API"
 ];
 
 
@@ -16,5 +17,6 @@ requiredKey.forEach(el => {
 
 module.exports = {
     redis: process.env.REDIS,
-    botToken: process.env.BOT_TOKEN
+    botToken: process.env.BOT_TOKEN,
+    api: process.env.API
 }
