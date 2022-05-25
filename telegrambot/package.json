@@ -17,6 +17,8 @@
     "node-geocoder": "^4.0.0",
     "node-telegram-bot-api": "^0.56.0",
     "redis": "^4.0.1",
-    "telegraf": "^4.8.2"
+    "telegraf": "^4.8.2",
+    "winston": "^3.7.2",
+    "winston-daily-rotate-file": "^4.6.1"
   }
 }

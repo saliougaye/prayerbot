@@ -1,7 +1,7 @@
 const { Telegraf, Markup } = require('telegraf');
 const NodeGeocoder = require('node-geocoder');
 const { botToken } = require('./helper/config-helper');
-const service = require('./handle');
+const prayerService = require('./services/prayerService');
 const labels = require('./constant/strings');
 const callbackEvents = require('./constant/callback_events');
 
@@ -14,12 +14,17 @@ const geocoder = NodeGeocoder({
 bot.start(async (ctx) => {
 
     const userId = ctx.update.message.from.id;
-    const userExist = await service.userExist(userId);
+    const userExist = await prayerService.userExist(userId);
 
     if(userExist) {
 
-        const location = await service.getUserLocation(userId);
-        const message = await service.getPrayers(location)
+        const location = await prayerService.getUserLocation(userId);
+
+        if(!location) {
+            return ctx.reply(labels.generalError);
+        }
+
+        const message = await prayerService.getPrayers(location)
         
         return ctx.reply(message);
     }
@@ -31,19 +36,16 @@ bot.start(async (ctx) => {
 })
 
 
-
-
 bot.on('callback_query', async (ctx) => {
 
     const data = ctx.callbackQuery.data;
 
-    // FIXME generalize this if/switch
     if(data.includes(callbackEvents.setCity)) {
         const userId = ctx.callbackQuery.from.id;
 
         const city = data.replace(`${callbackEvents.setCity}=`, '');
 
-        const result = await service.setUserLocation(userId, city);
+        const result = await prayerService.setUserLocation(userId, city);
 
         await ctx.answerCbQuery(labels.locationSendedText);
 
@@ -88,14 +90,19 @@ bot.on('location', async (ctx) => {
 
 bot.command('today', async (ctx) => {
     const userId = ctx.update.message.from.id;
-    const userExist = await service.userExist(userId);
+    const userExist = await prayerService.userExist(userId);
 
     if(!userExist) {
         return ctx.reply(labels.initializeFirstText);
     }
 
-    const location = await service.getUserLocation(userId)
-    const message = await service.getPrayers(location);
+    const location = await prayerService.getUserLocation(userId)
+
+    if(!location) {
+        return ctx.reply(labels.generalError);
+    }
+    
+    const message = await prayerService.getPrayers(location);
 
     return ctx.reply(message);
     
@@ -109,7 +116,7 @@ bot.command('location', async (ctx) => {
         labels.locationText,
         getLocationKeyboard()
     );
-})
+});
 
 const getLocationKeyboard = () => {
     return Markup.keyboard([

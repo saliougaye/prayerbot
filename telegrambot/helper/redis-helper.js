@@ -4,10 +4,13 @@ const config = require('./config-helper');
 
 const redisHelper = () => {
 
-    // FIXME add max retries
-    // FIXME connection error exit program
-
-    const redis = new Redis(config.redis);
+    const redis = new Redis(config.redis, {
+        maxRetriesPerRequest: 10,
+        retryStrategy: (times) => {
+            const delay = Math.min(times * 50, 2000);
+            return delay;
+        }
+    });
 
     const get = async (key) => {
         const value = await redis.get(key);
