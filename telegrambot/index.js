@@ -1,147 +1,28 @@
-const { Telegraf, Markup } = require('telegraf');
-const NodeGeocoder = require('node-geocoder');
-const { botToken } = require('./helper/config-helper');
-const prayerService = require('./services/prayerService');
-const labels = require('./constant/strings');
-const callbackEvents = require('./constant/callback_events');
+const { isProd, webhookUrl, port } = require('./helper/config-helper');
+const fastify = require('fastify');
+const bot = require('./bot');
 
+(async () => {
+    if (isProd) {
 
-const bot = new Telegraf(botToken);
-const geocoder = NodeGeocoder({
-    provider: 'teleport'
-});
+        if (!webhookUrl) throw Error('❌ In production mode WEBHOOK_URL is required');
 
-bot.start(async (ctx) => {
+        const app = fastify();
 
-    const userId = ctx.update.message.from.id;
-    const userExist = await prayerService.userExist(userId);
+        const secret_path = `/telegraf/${bot.secretPathComponent()}`;
 
-    if(userExist) {
+        app.post(secret_path, (req, reply) => bot.handleUpdate(req.body, reply.raw));
 
-        const location = await prayerService.getUserLocation(userId);
+        await bot.telegram.setWebhook(webhookUrl + secret_path);
 
-        if(!location) {
-            return ctx.reply(labels.generalError);
-        }
+        console.log('Webhook is set on', webhookUrl);
 
-        const message = await prayerService.getPrayers(location)
-        
-        return ctx.reply(message);
+        app.listen(port, '0.0.0.0', () => {
+            console.log('Listening on port', port)
+        });
+
+    } else {
+        bot.launch();
     }
+})();
 
-    return ctx.reply(
-        labels.locationText,
-        getLocationKeyboard()
-    );
-})
-
-
-bot.on('callback_query', async (ctx) => {
-
-    const data = ctx.callbackQuery.data;
-
-    if(data.includes(callbackEvents.setCity)) {
-        const userId = ctx.callbackQuery.from.id;
-
-        const city = data.replace(`${callbackEvents.setCity}=`, '');
-
-        const result = await prayerService.setUserLocation(userId, city);
-
-        await ctx.answerCbQuery(labels.locationSendedText);
-
-        return result ? ctx.reply(labels.userLocationText(city)) : ctx.reply(labels.generalError);
-
-    }
-    
-    return ctx.answerCbQuery(labels.unhandledCallbackEventText);
-})
-
-
-
-
-bot.on('location', async (ctx) => {
-
-    const { latitude, longitude } = ctx.message.location;
-
-    const res = await geocoder.reverse({ 
-        lat: latitude, 
-        lon: longitude 
-    });
-
-    const mapped = res.map(el => ({ city: el.city, country: el.country }));
-
-    return ctx.reply(
-        labels.chooseLocationText,
-        Markup.inlineKeyboard(
-            [
-                mapped.map(el => (
-                    Markup.button.callback(
-                        `${el.city} - ${el.country}`, 
-                        `${callbackEvents.setCity}=${el.city}`
-                    )
-                ))
-            ]
-        )
-        .resize()
-        .oneTime()
-    );
-});
-
-bot.command('today', async (ctx) => {
-    const userId = ctx.update.message.from.id;
-    
-    const message = await getPrayer(userId);
-
-    return ctx.reply(message);
-    
-});
-
-
-bot.command('location', async (ctx) => {
-
-    // FIXME location keyboard remove after clicked
-    return ctx.reply(
-        labels.locationText,
-        getLocationKeyboard()
-    );
-});
-
-bot.command('tomorrow', async (ctx) => {
-    const userId = ctx.update.message.from.id;
-    
-    const message = await getPrayer(userId, true);
-    return ctx.reply(message);
-
-});
-
-const getPrayer = async (userId, tomorrow = false) => {
-
-    const userExist = await prayerService.userExist(userId);
-
-    if(!userExist) {
-        return labels.initializeFirstText;
-    }
-
-    const location = await prayerService.getUserLocation(userId)
-
-    if(!location) {
-        return labels.generalError;
-    }
-
-    const message = await prayerService.getPrayers(location, tomorrow);
-
-    return message;
-
-}
-
-const getLocationKeyboard = () => {
-    return Markup.keyboard([
-        Markup.button.locationRequest(labels.locationButtonText)
-    ])
-    .resize()
-    .oneTime();
-}
-
-
-
-bot.launch();

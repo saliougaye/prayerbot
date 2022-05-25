@@ -1,6 +1,6 @@
 build:
   docker:
-    botworker: telegrambot/Dockerfile
+    web: telegrambot/Dockerfile
     worker: workers/Dockerfile
   config:
     NODE_ENV: $NODE_ENV
@@ -9,5 +9,5 @@ build:
     API: $API
 
 run:
-  botworker: npm start
+  web: npm start
   worker: npm start

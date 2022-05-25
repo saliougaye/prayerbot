@@ -19,5 +19,7 @@ module.exports = {
     redis: process.env.REDIS,
     botToken: process.env.BOT_TOKEN,
     api: process.env.API,
-    isProd: process.env.NODE_ENV === 'PROD' ? true : false
+    isProd: process.env.NODE_ENV === 'PROD' ? true : false,
+    webhookUrl: process.env.WEBHOOK_URL,
+    port: process.env.PORT || 3000
 }
