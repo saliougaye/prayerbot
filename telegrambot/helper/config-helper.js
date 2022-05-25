@@ -5,7 +5,6 @@ const requiredKey = [
     "REDIS",
     "BOT_TOKEN",
     "API",
-    "NODE_ENV"
 ];
 
 

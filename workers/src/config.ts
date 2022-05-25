@@ -11,7 +11,7 @@ interface Config {
 }
 
 const keyRequired : string[] = [
-    "REDIS_URL",
+    "REDIS",
     "BOT_TOKEN"
 ]
 
@@ -24,7 +24,7 @@ keyRequired.forEach(el => {
 
 
 const config : Config = {
-    redisUrl: process.env.REDIS_URL!,
+    redisUrl: process.env.REDIS!,
     botToken: process.env.BOT_TOKEN!,
     environment: process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'PROD' ? 'PROD' : 'DEV'
 };

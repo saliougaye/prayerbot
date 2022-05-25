@@ -1,0 +1,13 @@
+build:
+  docker:
+    web: telegrambot/Dockerfile
+    worker: workers/Dockerfile
+  config:
+    NODE_ENV: $NODE_ENV
+    REDIS: $REDIS_URL
+    BOT_TOKEN: $BOT_TOKEN
+    API: $PRAYER_API_ENDPOINT
+
+run:
+  web: npm start
+  worker: npm start
