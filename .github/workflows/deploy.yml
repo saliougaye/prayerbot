@@ -25,13 +25,13 @@ jobs:
       - name: Set configurations variables on heroku 
         run: |
           heroku config:set BOT_TOKEN=$BOT_TOKEN -a $HEROKU_APP_NAME
-          heroku config:set REDIS_URL=$REDIS -a $HEROKU_APP_NAME
+          heroku config:set REDIS=$REDIS -a $HEROKU_APP_NAME
           heroku config:set PRAYER_API_ENDPOINT=$PRAYER_API_ENDPOINT -a $HEROKU_APP_NAME
           heroku config:set NODE_ENV=$NODE_ENV -a $HEROKU_APP_NAME
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          REDIS_URL: ${{ secrets.REDIS }}
+          REDIS: ${{ secrets.REDIS }}
           PRAYER_API_ENDPOINT: ${{ secrets.PRAYER_API_ENDPOINT }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
       - name: Add Heroku remote
