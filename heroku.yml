@@ -6,7 +6,7 @@ build:
     NODE_ENV: $NODE_ENV
     REDIS: $REDIS_URL
     BOT_TOKEN: $BOT_TOKEN
-    API: $PRAYER_API_ENDPOINT
+    API: $API
 
 run:
   web: npm start
