@@ -12,7 +12,10 @@ Telegram Bot for our muslim friends
 <br/>
 
 ## 💻 Technologies
-All is written in Javascript
+```
+- Telegram bot is written in Javascript
+- Workers are written in Typescript
+```
 
 ## ✅ TO-DO
 
