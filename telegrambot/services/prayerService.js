@@ -3,9 +3,13 @@ const axios = require('axios');
 const { api } = require('../helper/config-helper');
 const labels = require('../constant/strings');
 const logger = require('./logger');
+const moment = require('moment');
 
 const handler = () => {
 
+    const prayerKey = 'CACHE_PRAYER';
+
+    
     const userExist = async (userId) => {
         try {
             
@@ -61,12 +65,9 @@ const handler = () => {
         }
     }
 
+    
 
-    // FIXME cache prayers
-
-    const prayerKey = 'CACHE_PRAYER'
-
-    const getPrayers = async (city) => {
+    const getPrayers = async (city, tomorrow = false) => {
 
         try {
 
@@ -86,8 +87,16 @@ const handler = () => {
                 await cachePrayers(cachedPrayers);
             }
 
-             
-            const prayerText = stringifyPrayer(data);
+            
+            const prayerText = stringifyPrayer(
+                tomorrow 
+                ? 
+                moment(data.date, 'ddd,DD MMM YYYY').add(1, 'days').format('ddd,DD MMM YYYY') 
+                : 
+                data.date, 
+                city, 
+                tomorrow ? data.tomorrow : data.today
+            );
 
             return prayerText;
 
@@ -123,10 +132,8 @@ const handler = () => {
 
     
 
-    const stringifyPrayer = (data) => {
-        const day = `📅 ${data.date}`;
-
-        const prayerTimes = data.today;
+    const stringifyPrayer = (date, city, prayerTimes) => {
+        const day = `📅 ${date}`;
 
         let times = '';
 
@@ -135,7 +142,7 @@ const handler = () => {
         }
 
         const text = `${day}
-🏠 ${data.city}
+🏠 ${city}
 ${times}
         `;
 

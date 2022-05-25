@@ -89,19 +89,8 @@ bot.on('location', async (ctx) => {
 
 bot.command('today', async (ctx) => {
     const userId = ctx.update.message.from.id;
-    const userExist = await prayerService.userExist(userId);
-
-    if(!userExist) {
-        return ctx.reply(labels.initializeFirstText);
-    }
-
-    const location = await prayerService.getUserLocation(userId)
-
-    if(!location) {
-        return ctx.reply(labels.generalError);
-    }
     
-    const message = await prayerService.getPrayers(location);
+    const message = await getPrayer(userId);
 
     return ctx.reply(message);
     
@@ -116,6 +105,34 @@ bot.command('location', async (ctx) => {
         getLocationKeyboard()
     );
 });
+
+bot.command('tomorrow', async (ctx) => {
+    const userId = ctx.update.message.from.id;
+    
+    const message = await getPrayer(userId, true);
+    return ctx.reply(message);
+
+});
+
+const getPrayer = async (userId, tomorrow = false) => {
+
+    const userExist = await prayerService.userExist(userId);
+
+    if(!userExist) {
+        return labels.initializeFirstText;
+    }
+
+    const location = await prayerService.getUserLocation(userId)
+
+    if(!location) {
+        return labels.generalError;
+    }
+
+    const message = await prayerService.getPrayers(location, tomorrow);
+
+    return message;
+
+}
 
 const getLocationKeyboard = () => {
     return Markup.keyboard([
