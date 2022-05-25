@@ -30,12 +30,14 @@ jobs:
           heroku config:set REDIS=$REDIS -a $HEROKU_APP_NAME
           heroku config:set API=$API -a $HEROKU_APP_NAME
           heroku config:set NODE_ENV=$NODE_ENV -a $HEROKU_APP_NAME
+          heroku config:set WEBHOOK_URL=$WEBHOOK_URL -a $HEROKU_APP_NAME
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           REDIS: ${{ secrets.REDIS }}
           API: ${{ secrets.PRAYER_API_ENDPOINT }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
       - name: Add Heroku remote
         run: heroku git:remote --app $HEROKU_APP_NAME
         env:
