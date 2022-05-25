@@ -1,36 +1,31 @@
-require('dotenv').config();
-
 const { Telegraf, Markup } = require('telegraf');
 const NodeGeocoder = require('node-geocoder');
 
+const { botToken } = require('./helper/config-helper');
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf(botToken);
 const geocoder = NodeGeocoder({
     provider: 'teleport'
 });
 
+const service = require('./handle');
 
 
 
-// (async () => {
+bot.start(async (ctx) => {
+
+    // FIXME give a better message when start
 
     
+    const userExist = await service.userExist(ctx.update.message.from.id);
 
-//     const res = await geocoder.reverse({ lat: 41.836093, lon: 12.484808 });
+    if(userExist) {
+        // FIXME return prayers
+        
+        return ctx.reply('Welcome my friend');
+    }
 
-
-//     console.log(res)
-
-// })()
-
-
-bot.start((ctx) => {
-
-    // FIXME give a better message when start; if user is already in the db go next
-
-    ctx.reply(
+    return ctx.reply(
         'Give me the location',
         Markup.keyboard([
             Markup.button.locationRequest('📍 Give me the location')
@@ -39,16 +34,29 @@ bot.start((ctx) => {
 })
 
 
-bot.action(/"type":"city"/, (ctx, next) => {
-    console.log(ctx)
-    return ctx.reply('👍').then(() => next())
+
+
+bot.on('callback_query', async (ctx) => {
+    console.log(ctx);
+
+    const data = ctx.callbackQuery.data;
+
+    if(data.includes('init_city')) {
+        const userId = ctx.callbackQuery.from.id;
+
+        const result = await service.insertUser(userId, data.replace('set_city=', ''))
+
+        await ctx.answerCbQuery('Thank you for the position 🙏🏿');
+
+        return result ? ctx.reply('Welcome my friend') : ctx.reply('Error');
+
+    }
+    
+    return ctx.answerCbQuery('Callback');
 })
 
-// bot.on('text', (ctx) => {
-//     console.log(ctx.)
 
-//     ctx.reply('Hello World');
-// });
+
 
 bot.on('location', async (ctx) => {
     console.log(ctx.message.location);
@@ -57,26 +65,24 @@ bot.on('location', async (ctx) => {
 
     const mapped = res.map(el => ({ city: el.city, country: el.country }));
 
-    // if(mapped.length === 1) {
-    //     return ctx.reply(`Thanks for the location 🙏🏿\n📍 Your location is ${mapped[0].city}`)
-    // }
-
-
 
     return ctx.reply(
         'Which one of this?',
-        Markup.keyboard(
-            mapped.map(el => ([ 
-                Markup.button.callback(`${el.city} - ${el.country}`, JSON.stringify({
-                    type: 'city',
-                    data: el
-                })) 
-            ]))
+        Markup.inlineKeyboard(
+            [
+                mapped.map(el => (
+                    Markup.button.callback(`${el.city} - ${el.country}`, `init_city=${el.city}`) // FIXME constant value set_city 
+                ))
+            ]
         )
         .resize()
         .oneTime()
     );
 });
+
+bot.command('today', async (ctx) => {
+
+})
 
 
 
