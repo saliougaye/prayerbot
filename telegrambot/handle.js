@@ -1,7 +1,9 @@
 const redis = require('./helper/redis-helper');
 const axios = require('axios');
-const config = require('./helper/config-helper')
+const { api } = require('./helper/config-helper');
+const labels = require('./constant/strings');
 
+// FIXME add logger
 
 const handler = () => {
 
@@ -53,23 +55,42 @@ const handler = () => {
     }
 
 
-    // FIXME cache
+    // FIXME cache prayers
     const getPrayers = async (city) => {
 
         try {
-            const res = await axios.get(`${config.api}/${city}`);
+            const res = await axios.get(`${api}/${city}`);
 
-            const data = res.data;
+            
+            const prayerText = stringifyPrayer(res.data);
 
-            return data;
+            return prayerText;
 
         } catch (error) {
             
             console.log(error);
 
-            return undefined;
+            return labels.generalError;
+        }
+    }
+
+    const stringifyPrayer = (data) => {
+        const day = `📅 ${data.date}`;
+
+        const prayerTimes = data.today;
+
+        let times = '';
+
+        for(const prop in prayerTimes) {
+            times += `${prop} ${prayerTimes[prop]}\n`;
         }
 
+        const text = `${day}
+🏠 ${data.city}
+${times}
+        `;
+
+        return text;
     }
 
     return {
