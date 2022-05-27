@@ -8,7 +8,7 @@ const cleanerQueueWorker = 'prayer-cleaner-worker';
 const activity = 'prayer-cleaner';
 
 
-const logger = Logger('prayer-cleaner');
+const logger = Logger(activity);
 
 const instantiateCleanerWorker = async () => {
     
