@@ -5,7 +5,7 @@ import config from "../config"
 const redisHelper = () => {
 
     const redis = new Redis(config.redisUrl, {
-        maxRetriesPerRequest: undefined,
+        maxRetriesPerRequest: null,
     })
 
     const getConnection = () => {

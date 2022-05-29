@@ -33,33 +33,11 @@ bot.start(async (ctx) => {
         labels.locationText,
         getLocationKeyboard()
     );
-})
-
-
-bot.on('callback_query', async (ctx) => {
-
-    const data = ctx.callbackQuery.data;
-
-    if(data.includes(callbackEvents.setCity)) {
-        const userId = ctx.callbackQuery.from.id;
-
-        const city = data.replace(`${callbackEvents.setCity}=`, '');
-
-        const result = await prayerService.setUserLocation(userId, city);
-
-        await ctx.answerCbQuery(labels.locationSendedText);
-
-        return result ? ctx.reply(labels.userLocationText(city)) : ctx.reply(labels.generalError);
-
-    }
-    
-    return ctx.answerCbQuery(labels.unhandledCallbackEventText);
-})
-
-
-
+});
 
 bot.on('location', async (ctx) => {
+
+    const userId = ctx.message.from.id;
 
     const { latitude, longitude } = ctx.message.location;
 
@@ -68,23 +46,20 @@ bot.on('location', async (ctx) => {
         lon: longitude 
     });
 
-    const mapped = res.map(el => ({ city: el.city, country: el.country }));
+    const city = res[0].city;
 
-    return ctx.reply(
-        labels.chooseLocationText,
-        Markup.inlineKeyboard(
-            [
-                mapped.map(el => (
-                    Markup.button.callback(
-                        `${el.city} - ${el.country}`, 
-                        `${callbackEvents.setCity}=${el.city}`
-                    )
-                ))
-            ]
-        )
-        .resize()
-        .oneTime()
+    const result = await prayerService.setUserLocation(
+        userId, 
+        {
+            latitude,
+            longitude
+        },
+        city
     );
+
+    return result ? 
+        ctx.reply(labels.userLocationText(city)) 
+        : ctx.reply(labels.generalError);
 });
 
 bot.command('today', async (ctx) => {
@@ -122,7 +97,7 @@ const getPrayer = async (userId, tomorrow = false) => {
         return labels.initializeFirstText;
     }
 
-    const location = await prayerService.getUserLocation(userId)
+    const location = await prayerService.getUserLocation(userId);
 
     if(!location) {
         return labels.generalError;

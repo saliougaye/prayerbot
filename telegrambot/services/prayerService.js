@@ -4,18 +4,19 @@ const { api } = require('../helper/config-helper');
 const labels = require('../constant/strings');
 const logger = require('./logger');
 const moment = require('moment');
+const userHelper = require('../helper/user-helper');
 
 const handler = () => {
 
     const prayerKey = 'CACHE_PRAYER';
+    const userKey = 'PRAYER_USERS';
 
-    
     const userExist = async (userId) => {
         try {
             
-            const exist = await redis.keyExist(userId);
+            const user = await getUser(userId);
 
-            return exist;
+            return user !== undefined;
 
         } catch (error) {
             logger.error('Failed to check if the user exist', error, {
@@ -27,11 +28,44 @@ const handler = () => {
         }
     }
 
-    const setUserLocation = async (userId, city) => {
+    const getUsers = async () => {
+        const rawUsers = await redis.get(userKey);
+
+        if(!rawUsers) {
+            return [];
+        }
+
+        const users = JSON.parse(rawUsers);
+
+        return users;
+    }
+
+    const getUser = async (userId) => {
+
+        const users = await getUsers();
+
+        const userFiltered = users.filter(el => el.id === userId);
+
+        return userFiltered.length === 0 ? undefined : userFiltered[0]
+
+    }
+    const setUserLocation = async (userId, coordinates, city) => {
 
         try {
 
-            const inserted = await redis.set(userId, city);
+            let users = await getUsers();
+
+            const exist = await userExist(userId);
+
+            if(exist) {
+                users = users.filter(el => el.id !== userId);
+            }
+
+            const newUser = userHelper.createUser(userId, coordinates, city);
+
+            users.push(newUser);
+
+            const inserted = await redis.set(userKey, JSON.stringify(users));
 
             return inserted;
 
@@ -51,7 +85,7 @@ const handler = () => {
 
         try {
 
-            const city = await redis.get(userId);
+            const { city } = await getUser(userId);
 
             return city;
 
