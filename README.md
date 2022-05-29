@@ -19,8 +19,11 @@ Telegram Bot for our muslim friends
 
 ## ✅ TO-DO
 
-
 <br/>
+
+**N.B**: The bot is deployed on heroku and uses [Kaffeine](https://github.com/RomainButteaud/Kaffeine) to prevent the heroky app go in sleeping mode
+
+
 
 ## 💡 Idea by
 
