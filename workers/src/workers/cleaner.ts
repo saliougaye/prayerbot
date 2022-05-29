@@ -43,15 +43,13 @@ const instantiateCleanerWorker = async () => {
 }
 
 const onExecute = async (job: Job<any, any, string>) : Promise<any> => {
-
+    
     const result = await prayerService.cleanPrayers();
 
 
     if(!result) {
         throw new Error('clean not executed correctly. prayers not updated');
     }
-
-    logger.info(`✅ clean prayers worker completed successfully `);
 
 }
 

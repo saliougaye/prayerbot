@@ -44,13 +44,7 @@ const instantiateNotifier = async () => {
 
 const onExecute = async (job: Job<any, any, string>): Promise<any> => {
 
-
-    console.log('notify');
     await prayerService.notify();
-
-    logger.info(`✅ notify prayers worker completed successfully`);
-
-
 
 }
 
