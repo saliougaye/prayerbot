@@ -1,6 +1,7 @@
 import { Job, Queue, Worker, QueueScheduler } from 'bullmq';
 import redisHelper from '../helpers/redis-helper';
 import Logger from '../services/logger';
+import prayerService from '../services/prayerService';
 
 
 const notifierQueueName = 'prayer-notifier-queue';
@@ -16,7 +17,7 @@ const instantiateNotifier = async () => {
     const notifierQueueScheduler = new QueueScheduler(notifierQueueName, {
         connection: connection
     })
-    
+
     const notifierQueue = new Queue(notifierQueueName, {
         connection: connection
     });
@@ -28,22 +29,29 @@ const instantiateNotifier = async () => {
     notifierWorker.on('completed', onCompleted);
     notifierWorker.on('failed', onFailed);
 
-    
+
     await notifierQueue.add(activity, {}, {
         repeat: {
-            cron: '0 0 * * *'
+            cron: '* * * * *'
         }
     });
 
 
 
     logger.info(`✅ ${notifierQueueWorker} started`);
-    
+
 }
 
-const onExecute = async (job: Job<any, any, string>) : Promise<any> => {
+const onExecute = async (job: Job<any, any, string>): Promise<any> => {
 
-    // TODO logic
+
+    console.log('notify');
+    await prayerService.notify();
+
+    logger.info(`✅ notify prayers worker completed successfully`);
+
+
+
 }
 
 const onCompleted = (job: Job<any, any, string>) => {
@@ -53,7 +61,7 @@ const onCompleted = (job: Job<any, any, string>) => {
 }
 
 const onFailed = (job: Job<any, any, string>, err: Error) => {
-    logger.error(`❌ ${notifierQueueName} failed`,err, {
+    logger.error(`❌ ${notifierQueueName} failed`, err, {
         jobId: job.id
     })
 }
